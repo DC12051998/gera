@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es-419">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>¡Aprende y Repite! - Juego de Lenguaje</title>
+    <!-- Tailwind CSS para diseño adaptable -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para íconos infantiles -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Fredoka One para estilo súper infantil y redondeado -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti para la animación de premio -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        * {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        /* Estilos de botones inflados/infantiles */
+        .btn-bounce {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 0 rgba(0,0,0,0.15);
+        }
+        .btn-bounce:active {
+            transform: translateY(6px) scale(0.96);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+        }
+
+        /* Pulsación animada para el micrófono */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.08); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .mic-listening {
+            animation: pulse-ring 1.2s infinite;
+            background-color: #ef4444 !important;
+        }
+
+        /* Animación para objetos de aprendizaje */
+        @keyframes float-icon {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        .animate-float {
+            animation: float-icon 3s ease-in-out infinite;
+        }
+
+        /* Ocultar scrollbars completamente */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between p-4 max-w-md mx-auto relative select-none">
+
+    <!-- BARRA SUPERIOR: PUNTOS, ESTRELLAS Y DESCARGA APK -->
+    <header class="w-full flex justify-between items-center bg-white/80 backdrop-blur-md px-4 py-2 rounded-3xl shadow-lg border-2 border-white mb-2">
+        <!-- Botón Menú / Inicio -->
+        <button onclick="goHome()" class="btn-bounce bg-yellow-400 text-yellow-900 w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow">
+            <i class="fa-solid fa-house"></i>
+        </button>
+
+        <!-- Contador de Estrellas -->
+        <div class="flex items-center gap-2 bg-amber-100 px-4 py-1.5 rounded-2xl border border-amber-300">
+            <i class="fa-solid fa-star text-amber-500 text-2xl animate-bounce"></i>
+            <span id="starCount" class="text-2xl font-bold text-amber-800">0</span>
+        </div>
+
+        <!-- Botón de Descargar HTML / Info APK -->
+        <button onclick="openApkModal()" class="btn-bounce bg-emerald-500 text-white px-3 py-2 rounded-2xl flex items-center gap-1 shadow text-sm font-bold">
+            <i class="fa-solid fa-mobile-screen-button text-lg"></i>
+            <span>APK</span>
+        </button>
+    </header>
+
+    <!-- PANTALLA 1: SELECCIÓN DE CATEGORÍAS -->
+    <main id="screenCategories" class="w-full flex-1 flex flex-col justify-center items-center gap-4 py-2">
+        <div class="text-center">
+            <h1 class="text-3xl font-extrabold text-indigo-900 drop-shadow-sm">¡Aprende y Repite! </h1>
+            <p class="text-indigo-700 text-lg font-medium">Elige un tema para jugar</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 w-full max-w-xs">
+            <!-- Categoría Animales -->
+            <button onclick="selectCategory('animales')" class="btn-bounce bg-orange-400 border-b-4 border-orange-600 text-white p-4 rounded-3xl flex flex-col items-center justify-center gap-2 shadow-lg">
+                <span class="text-5xl">🐶</span>
+                <span class="text-xl font-bold">Animales</span>
+            </button>
+
+            <!-- Categoría Frutas -->
+            <button onclick="selectCategory('frutas')" class="btn-bounce bg-rose-400 border-b-4 border-rose-600 text-white p-4 rounded-3xl flex flex-col items-center justify-center gap-2 shadow-lg">
+                <span class="text-5xl">🍎</span>
+                <span class="text-xl font-bold">Frutas</span>
+            </button>
+
+            <!-- Categoría Colores -->
+            <button onclick="selectCategory('colores')" class="btn-bounce bg-purple-400 border-b-4 border-purple-600 text-white p-4 rounded-3xl flex flex-col items-center justify-center gap-2 shadow-lg">
+                <span class="text-5xl">🎨</span>
+                <span class="text-xl font-bold">Colores</span>
+            </button>
+
+            <!-- Categoría Objetos -->
+            <button onclick="selectCategory('objetos')" class="btn-bounce bg-sky-400 border-b-4 border-sky-600 text-white p-4 rounded-3xl flex flex-col items-center justify-center gap-2 shadow-lg">
+                <span class="text-5xl">🏠</span>
+                <span class="text-xl font-bold">Casa</span>
+            </button>
+
+            <!-- Categoría Vocales -->
+            <button onclick="selectCategory('vocales')" class="btn-bounce bg-emerald-400 border-b-4 border-emerald-600 text-white p-4 rounded-3xl flex flex-col items-center justify-center gap-2 shadow-lg col-span-2">
+                <span class="text-5xl">🅰️</span>
+                <span class="text-xl font-bold">Las Vocales</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- PANTALLA 2: JUEGO / PRÁCTICA -->
+    <main id="screenGame" class="w-full flex-1 flex flex-col justify-between items-center hidden py-2">
+        <!-- Barra de progreso -->
+        <div class="w-full bg-white/60 rounded-full h-4 p-1 border border-white shadow-inner">
+            <div id="progressBar" class="bg-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+
+        <!-- Tarjeta Central con Ilustración y Palabra -->
+        <div class="w-full bg-white rounded-3xl p-6 shadow-xl border-4 border-indigo-200 flex flex-col items-center justify-center relative my-auto animate-float">
+            <!-- Ilustración Grande -->
+            <div id="cardEmoji" class="text-8xl mb-2 filter drop-shadow-md">🐶</div>
+            
+            <!-- Nombre de la palabra -->
+            <h2 id="cardWord" class="text-4xl font-extrabold text-indigo-900 tracking-wide uppercase">PERRO</h2>
+
+            <!-- Feedback flotante (Mensaje cariñoso) -->
+            <div id="feedbackText" class="text-lg font-bold text-center mt-2 h-8 flex items-center justify-center text-pink-600">
+                ¡Toca el botón para escuchar!
+            </div>
+        </div>
+
+        <!-- Botones de Acción (Escuchar y Hablar) -->
+        <div class="w-full flex justify-center items-center gap-6 my-2">
+            <!-- Botón Escuchar -->
+            <button onclick="speakWord()" class="btn-bounce bg-blue-500 hover:bg-blue-600 text-white w-24 h-24 rounded-full flex flex-col items-center justify-center shadow-lg border-4 border-blue-200">
+                <i class="fa-solid fa-volume-high text-3xl"></i>
+                <span class="text-xs font-bold mt-1">Escuchar</span>
+            </button>
+
+            <!-- Botón Decir / Micrófono -->
+            <button id="btnMic" onclick="toggleListening()" class="btn-bounce bg-rose-500 hover:bg-rose-600 text-white w-28 h-28 rounded-full flex flex-col items-center justify-center shadow-xl border-4 border-rose-200">
+                <i class="fa-solid fa-microphone text-4xl"></i>
+                <span class="text-xs font-bold mt-1">Repetir</span>
+            </button>
+        </div>
+
+        <!-- Botón para Siguiente Palabra -->
+        <div class="w-full flex justify-end">
+            <button onclick="nextWord()" class="btn-bounce bg-amber-400 text-amber-900 px-5 py-2.5 rounded-2xl font-bold flex items-center gap-2 shadow-md">
+                <span>Siguiente</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- MODAL DE FELICITACIONES (NIVEL COMPLETADO) -->
+    <div id="modalWin" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-3xl p-6 w-full max-w-xs flex flex-col items-center text-center shadow-2xl border-4 border-yellow-300 animate-bounce-short">
+            <div class="text-7xl mb-2">🏆</div>
+            <h3 class="text-3xl font-extrabold text-indigo-900">¡Fantástico!</h3>
+            <p class="text-indigo-600 font-medium my-2">¡Lo hiciste superbién, amigo!</p>
+            <div class="flex gap-2 my-3 text-4xl text-amber-400">
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+                <i class="fa-solid fa-star"></i>
+            </div>
+            <button onclick="closeWinModal()" class="btn-bounce w-full bg-emerald-500 text-white font-bold py-3 rounded-2xl text-xl shadow-lg mt-2">
+                ¡Jugar otra vez!
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL INFO CONVERSIÓN A APK -->
+    <div id="modalApk" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-white rounded-3xl p-5 w-full max-w-sm flex flex-col text-left shadow-2xl border-2 border-indigo-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-xl font-bold text-indigo-900 flex items-center gap-2">
+                    <i class="fa-brands fa-android text-emerald-500 text-2xl"></i> Convertir a APK
+                </h3>
+                <button onclick="closeApkModal()" class="text-gray-400 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <p class="text-xs text-gray-600 mb-3">
+                Este archivo es 100% autónomo. Puedes descargarlo y convertirlo en una App para Android fácilmente de estas formas:
+            </p>
+
+            <div class="space-y-3 text-xs">
+                <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                    <p class="font-bold text-indigo-900 mb-1">Opción 1: WebintoApp (La más fácil, sin código)</p>
+                    <ol class="list-decimal list-inside text-gray-700 space-y-1">
+                        <li>Haz clic abajo en <b>Descargar juego (.html)</b>.</li>
+                        <li>Entra en <b>webintoapp.com</b>.</li>
+                        <li>Sube este archivo HTML y genera tu archivo APK listo para instalar en tu teléfono.</li>
+                    </ol>
+                </div>
+
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-100">
+                    <p class="font-bold text-amber-900 mb-1">Opción 2: Apache Cordova / Capacitor</p>
+                    <p class="text-gray-700">Crea un proyecto Cordova y renombra este archivo a <code>index.html</code> dentro de la carpeta <code>www/</code>.</p>
+                </div>
+            </div>
+
+            <button onclick="downloadHTML()" class="btn-bounce bg-emerald-500 text-white font-bold py-3 rounded-2xl text-center shadow-lg mt-4 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-download text-lg"></i>
+                Descargar Código HTML (.html)
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT DEL JUEGO -->
+    <script>
+        // BASE DE DATOS DE PALABRAS Y CATEGORÍAS (ESPAÑOL LATINO)
+        const categoriesData = {
+            animales: [
+                { word: 'Perro', emoji: '🐶' },
+                { word: 'Gato', emoji: '🐱' },
+                { word: 'Vaca', emoji: '🐮' },
+                { word: 'Pato', emoji: '🦆' },
+                { word: 'León', emoji: '🦁' },
+                { word: 'Mono', emoji: '🐒' }
+            ],
+            frutas: [
+                { word: 'Manzana', emoji: '🍎' },
+                { word: 'Plátano', emoji: '🍌' },
+                { word: 'Uva', emoji: '🍇' },
+                { word: 'Fresa', emoji: '🍓' },
+                { word: 'Piña', emoji: '🍍' },
+                { word: 'Naranja', emoji: '🍊' }
+            ],
+            colores: [
+                { word: 'Rojo', emoji: '🔴' },
+                { word: 'Azul', emoji: '🔵' },
+                { word: 'Amarillo', emoji: '🟡' },
+                { word: 'Verde', emoji: '🟢' },
+                { word: 'Morado', emoji: '🟣' },
+                { word: 'Rosa', emoji: '🩷' }
+            ],
+            objetos: [
+                { word: 'Cama', emoji: '🛏️' },
+                { word: 'Silla', emoji: '🪑' },
+                { word: 'Mesa', emoji: '🪵' },
+                { word: 'Vaso', emoji: '🥛' },
+                { word: 'Pelota', emoji: '⚽' },
+                { word: 'Reloj', emoji: '⏰' }
+            ],
+            vocales: [
+                { word: 'A', emoji: '🅰️' },
+                { word: 'E', emoji: '🐘' },
+                { word: 'I', emoji: '🏝️' },
+                { word: 'O', emoji: '🐻' },
+                { word: 'U', emoji: '🍇' }
+            ]
+        };
+
+        // ESTADO DEL JUEGO
+        let currentCategory = [];
+        let currentIndex = 0;
+        let stars = 0;
+        let isListening = false;
+        let recognition = null;
+        let selectedVoice = null;
+
+        // MENSAJES CARIÑOSOS DE FEEDBACK EN ESPAÑOL LATINO
+        const positiveMessages = [
+            "¡Súper bien!",
+            "¡Lo dijiste excelente!",
+            "¡Muy bien hecho, amigo!",
+            "¡Qué bien hablas!",
+            "¡Bravo, excelente!"
+        ];
+
+        const tryAgainMessages = [
+            "¡Casi! Inténtalo de nuevo",
+            "¡Un esfuerzo más, tú puedes!",
+            "¡Dilo otra vez, amigo!",
+            "¡Escucha bien y repite!"
+        ];
+
+        // INICIALIZACIÓN SÍNTESIS DE VOZ (TEXT-TO-SPEECH) EN ESPAÑOL LATINO
+        function initVoices() {
+            if ('speechSynthesis' in window) {
+                let voices = window.speechSynthesis.getVoices();
+                // Priorizar voces específicas de Latinoamérica o español genérico
+                selectedVoice = voices.find(v => v.lang === 'es-MX' || v.lang === 'es-419') || voices.find(v => v.lang.startsWith('es'));
+                
+                window.speechSynthesis.onvoiceschanged = () => {
+                    voices = window.speechSynthesis.getVoices();
+                    selectedVoice = voices.find(v => v.lang === 'es-MX' || v.lang === 'es-419') || voices.find(v => v.lang.startsWith('es'));
+                };
+            }
+        }
+
+        // REPRODUCIR TEXTO POR VOZ
+        function speak(text, callback) {
+            if (!('speechSynthesis' in window)) {
+                console.error("Speech Synthesis no está soportado en este navegador.");
+                return;
+            }
+
+            window.speechSynthesis.cancel(); // Detener lecturas previas
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-419'; // Forzar idioma español latino
+            utterance.rate = 0.9; // Velocidad ligeramente más rápida
+            utterance.pitch = 1.0; // Tono estándar, amigable
+
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            } else {
+                console.warn("No se encontró una voz específica para es-419, se usará la predeterminada.");
+            }
+
+            if (callback) {
+                utterance.onend = callback;
+            }
+            
+            utterance.onerror = (event) => {
+                console.error('Error en SpeechSynthesis:', event);
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // INICIALIZAR RECONOCIMIENTO DE VOZ (SPEECH RECOGNITION)
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                setFeedback("Tu navegador no soporta micrófono. ¡Usa el botón de escuchar!");
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-419'; // Español latino
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                const micBtn = document.getElementById('btnMic');
+                micBtn.classList.add('mic-listening');
+                setFeedback("¡Te escucho! Habla ahora...");
+            };
+
+            recognition.onresult = (event) => {
+                const spokenText = event.results[0][0].transcript.toLowerCase().trim();
+                checkSpokenWord(spokenText);
+            };
+
+            recognition.onerror = (event) => {
+                stopListening();
+                setFeedback("¡No te escuché bien! Inténtalo otra vez, amigo.");
+                console.error("Error en SpeechRecognition:", event.error);
+            };
+
+            recognition.onend = () => {
+                stopListening();
+            };
+        }
+
+        // ACTIVAR / DESACTIVAR MICRÓFONO
+        function toggleListening() {
+            if (!recognition) {
+                initSpeechRecognition();
+            }
+
+            if (isListening) {
+                recognition.stop();
+                stopListening();
+            } else {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    stopListening();
+                    setFeedback("No se pudo iniciar el micrófono. Revisa permisos.");
+                    console.error("Error al iniciar recognition:", e);
+                }
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            const micBtn = document.getElementById('btnMic');
+            micBtn.classList.remove('mic-listening');
+        }
+
+        // COMPARAR LO QUE DIJO EL NIÑO
+        function checkSpokenWord(spoken) {
+            const targetWord = currentCategory[currentIndex].word.toLowerCase().trim();
+            
+            // Tolerancia infantil: comprobar si la palabra objetivo está dentro de lo que se escuchó
+            // o si lo que se escuchó es una parte de la palabra objetivo (útil para palabras largas)
+            if (spoken.includes(targetWord) || targetWord.includes(spoken)) {
+                // ACERTADO
+                stars += 10;
+                document.getElementById('starCount').innerText = stars;
+
+                // Animación de Confeti
+                confetti({
+                    particleCount: 70,
+                    spread: 60,
+                    origin: { y: 0.7 }
+                });
+
+                const randomPositive = positiveMessages[Math.floor(Math.random() * positiveMessages.length)];
+                setFeedback("⭐ " + randomPositive);
+                speak(randomPositive, () => {
+                    setTimeout(() => {
+                        nextWord();
+                    }, 1000);
+                });
+            } else {
+                // INTENTAR DE NUEVO
+                const randomTryAgain = tryAgainMessages[Math.floor(Math.random() * tryAgainMessages.length)];
+                setFeedback("💪 " + randomTryAgain);
+                speak(randomTryAgain);
+            }
+        }
+
+        // SELECCIONAR CATEGORÍA
+        function selectCategory(catKey) {
+            currentCategory = categoriesData[catKey];
+            currentIndex = 0;
+
+            document.getElementById('screenCategories').classList.add('hidden');
+            document.getElementById('screenGame').classList.remove('hidden');
+
+            loadWord();
+            
+            // Bienvenida guiada por voz
+            speak("¡Genial! Vamos a aprender. Toca el botón azul para escuchar.");
+        }
+
+        // CARGAR PALABRA EN LA TARJETA
+        function loadWord() {
+            const item = currentCategory[currentIndex];
+            document.getElementById('cardEmoji').innerText = item.emoji;
+            document.getElementById('cardWord').innerText = item.word;
+
+            // Actualizar barra de progreso
+            const percent = ((currentIndex) / currentCategory.length) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+
+            setFeedback("Toca el botón azul para escuchar");
+        }
+
+        // PRONUNCIAR PALABRA ACTUAL
+        function speakWord() {
+            const item = currentCategory[currentIndex];
+            speak(item.word);
+            setFeedback("Ahora toca el micrófono y repite la palabra");
+        }
+
+        // AVANZAR A LA SIGUIENTE PALABRA
+        function nextWord() {
+            if (currentIndex < currentCategory.length - 1) {
+                currentIndex++;
+                loadWord();
+            } else {
+                // COMPLETÓ LA CATEGORÍA
+                document.getElementById('progressBar').style.width = '100%';
+                openWinModal();
+            }
+        }
+
+        // CAMBIAR TEXTO DE FEEDBACK
+        function setFeedback(msg) {
+            document.getElementById('feedbackText').innerText = msg;
+        }
+
+        // VOLVER A LA PANTALLA PRINCIPAL
+        function goHome() {
+            window.speechSynthesis.cancel();
+            if (isListening && recognition) {
+                recognition.stop();
+            }
+
+            document.getElementById('screenGame').classList.add('hidden');
+            document.getElementById('screenCategories').classList.remove('hidden');
+            // Opcional: resetear estrellas o continuar desde donde se quedó
+            // stars = 0; 
+            // document.getElementById('starCount').innerText = stars;
+        }
+
+        // MODAL DE VICTORIA
+        function openWinModal() {
+            document.getElementById('modalWin').classList.remove('hidden');
+            confetti({ particleCount: 150, spread: 100, origin: { y: 0.5 } });
+            speak("¡Fantástico! ¡Has completado todas las palabras, felicidades!");
+        }
+
+        function closeWinModal() {
+            document.getElementById('modalWin').classList.add('hidden');
+            goHome();
+        }
+
+        // MODAL INFO APK
+        function openApkModal() {
+            document.getElementById('modalApk').classList.remove('hidden');
+        }
+
+        function closeApkModal() {
+            document.getElementById('modalApk').classList.add('hidden');
+        }
+
+        // DESCARGAR EL ARCHIVO HTML COMPLETO PARA CONVERTIR A APK
+        function downloadHTML() {
+            // Obtener todo el contenido HTML actual
+            const htmlContent = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'aprende-y-repite.html'; // Nombre de archivo más descriptivo
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // INICIALIZACIÓN AL CARGAR
+        window.onload = () => {
+            initVoices();
+            initSpeechRecognition();
+        };
+    </script>
+</body>
+</html>
